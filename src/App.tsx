@@ -2,7 +2,16 @@ import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import { PoseLandmarker, FilesetResolver, DrawingUtils } from '@mediapipe/tasks-vision'
 import WebCam from 'react-webcam'
+import { CodeBlock } from "react-code-blocks";
+
+function formatEvent(text: string){
+  const datetime = new Date()
+  return `${datetime.toLocaleTimeString()}: ${text}`
+}
+
 function App() {
+  const [humanDetected,setHumanDetected] = useState(false)
+  const [events,setEvents] = useState<Array<string>>([])
   const [poseLandmarkerReady, setPoseLandmarkerReady] = useState(false)
   const poseLandmarkerRef = useRef<PoseLandmarker>()
   const webCamRef = useRef<WebCam>(null)
@@ -42,6 +51,7 @@ function App() {
           poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            setHumanDetected(result.landmarks.length > 0)
             for (const landmark of result.landmarks) {
               drawingUtils.drawLandmarks(landmark, {
                 radius: (data) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 5, 1)
@@ -55,8 +65,14 @@ function App() {
       }
     }
     if (detectionRunning) {
+      setEvents((s) => {
+        return [...s, formatEvent("Detection enabled")]
+      })
       predictWebcam()
     } else {
+      setEvents((s) => {
+        return [...s, formatEvent("Detection disabled")]
+      })
       const canvasElement = canvasRef.current
       canvasElement && canvasCtx?.clearRect(0, 0, canvasElement.width, canvasElement.height);
       canvasCtx?.save();
@@ -67,6 +83,12 @@ function App() {
     }
   }, [detectionRunning])
 
+  useEffect(() => {
+    setEvents(s => {
+      const entry = formatEvent(humanDetected ? "Intruder detected" : "Intruder no longer detected")
+      return [...s, entry]
+    })
+  },[humanDetected])
 
   return (
     <div>
@@ -81,6 +103,9 @@ function App() {
         <div style={{ position: 'relative' }}>
           <WebCam ref={webCamRef} id='webcam' style={{ width: "480px", height: "360px", position: 'absolute' }} />
           <canvas ref={canvasRef} className="output_canvas" id="output_canvas" width="480px" height="360px" style={{ position: 'absolute', left: "0px", top: '0px' }}></canvas>
+          <div style={{ position: 'absolute', left: "490px", top: '0px', paddingLeft:"50px" }}>
+            {events.slice(1).slice(-5).map(x =>  <CodeBlock text={x} language='shell' showLineNumbers={false}/>)}
+          </div>
         </div>
       </div>
     </div>
