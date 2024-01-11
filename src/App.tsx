@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import './App.css'
 import { PoseLandmarker, FilesetResolver, DrawingUtils } from '@mediapipe/tasks-vision'
-const videoHeight = "360px";
-const videoWidth = "480px";
 
 function App() {
   const [poseLandmarkerReady, setPoseLandmarkerReady] = useState(false)
@@ -33,15 +31,15 @@ function App() {
   const hasGetUserMedia = () => !!navigator.mediaDevices?.getUserMedia;
 
   async function predictWebcam() {
-    if(canvasRef.current && videoRef.current && poseLandmarkerRef.current && canvasCtx && drawingUtils) {
+    if(webcamRunning && canvasRef.current && videoRef.current && poseLandmarkerRef.current && canvasCtx && drawingUtils) {
       const canvasElement = canvasRef.current
       const video = videoRef.current
       const poseLandmarker = poseLandmarkerRef.current
 
-      canvasElement.style.height = videoHeight;
-      video.style.height = videoHeight;
-      canvasElement.style.width = videoWidth;
-      video.style.width = videoWidth;
+      // canvasElement.style.height = videoHeight;
+      // video.style.height = videoHeight;
+      // canvasElement.style.width = videoWidth;
+      // video.style.width = videoWidth;
       // Now let's start detecting the stream.
       const startTimeMs = performance.now();
       if (lastVideoStartTimeRef.current !== video.currentTime) {
@@ -85,24 +83,25 @@ function App() {
         videoRef.current.srcObject = stream
         videoRef.current.addEventListener("loadeddata", predictWebcam);
       }
-      // video.srcObject = stream;
-      // video.addEventListener("loadeddata", predictWebcam);
     });
   }
 
+  // ! TODO: create a second button to control starting / stopping pose detection 
+
   return (
     <div>
-  <h1>Pose detection using the MediaPipe PoseLandmarker task</h1>
-    <h2>Demo: Webcam continuous pose landmarks detection</h2>
-    <p>Stand in front of your webcam to get real-time pose landmarker detection.</p>
-    <div id="liveView" className="videoView">
-      <button onClick={enableCam} disabled={!hasGetUserMedia()} id="webcamButton" className="mdc-button mdc-button--raised">
-        <span className="mdc-button__ripple"></span>
-        <span className="mdc-button__label">{webcamRunning ? "DISABLE WEBCAM" : "ENABLE WEBCAM"}</span>
-      </button>
-      <div style={{position: 'relative'}}>
-        <video ref={videoRef} id="webcam" style={{width: "1280px", height: "720px", position: 'absolute'}} autoPlay playsInline></video>
-        <canvas ref={canvasRef} className="output_canvas" id="output_canvas" width="1280" height="720" style={{position: 'absolute', left:"0px", top:'0px'}}></canvas>
+  <h1>MockingBird 🐦‍⬛</h1>
+    <h2>Intruder deterrence 🚨 powered by Artificial Intelligence 🤖</h2>
+    <p>Stand in front of your webcam to get real-time human detection.</p>
+
+        <div id="liveView" className="videoView">
+        <button onClick={enableCam} disabled={!hasGetUserMedia()} id="webcamButton" className="mdc-button mdc-button--raised">
+          <span className="mdc-button__ripple"></span>
+          <span className="mdc-button__label">{webcamRunning ? "DISABLE WEBCAM" : "ENABLE WEBCAM"}</span>
+        </button>
+        <div style={{position: 'relative'}}>
+          <video ref={videoRef} id="webcam" style={{width: "480px", height: "360px", position: 'absolute'}} autoPlay playsInline></video>
+          <canvas ref={canvasRef} className="output_canvas" id="output_canvas" width="480px" height="360px" style={{position: 'absolute', left:"0px", top:'0px'}}></canvas>
       </div>
     </div>
     </div>
