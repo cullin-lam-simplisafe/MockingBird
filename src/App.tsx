@@ -34,6 +34,7 @@ function App() {
 
   useEffect(() => {
     //audioPlayer.playing && audioPlayer.stop()
+    console.log(`loading audio ${audioFiles[audioIndex]}`)
     audioPlayer.load(audioFiles[audioIndex], {onend: () => setAudioIndex((audioIndex + 1) % audioFiles.length)})
   },[audioIndex])
 
@@ -75,7 +76,7 @@ function App() {
       clearInterval(id)
       audioPlayer.playing && audioPlayer.stop()
     }
-  },[detectionRunning, audioPlayer, humanDetected, audioPlayer.src, audioPlayer.isReady, audioPlayer.playing])
+  },[detectionRunning, audioPlayer, humanDetected, audioPlayer.src, audioPlayer.isReady, audioPlayer.playing, audioIndex])
 
   useEffect(() => {
     let id: number
