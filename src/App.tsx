@@ -3,13 +3,25 @@ import './App.css'
 import { PoseLandmarker, FilesetResolver, DrawingUtils } from '@mediapipe/tasks-vision'
 import WebCam from 'react-webcam'
 import { CodeBlock } from "react-code-blocks";
+import { useAudioPlayer } from 'react-use-audio-player';
 
 function formatEvent(text: string){
   const datetime = new Date()
   return `${datetime.toLocaleTimeString()}: ${text}`
 }
 
+const audioFiles = [
+  "/audio/calm.wav",
+  "/audio/noti.wav",
+  "/audio/appeal.wav",
+  "/audio/offer.wav",
+  "/audio/deter.wav",
+  "/audio/humanize.wav"
+]
+
 function App() {
+  const [audioIndex, setAudioIndex] = useState(0)
+  const lastDetectedTime = useRef<null | number>(null)
   const [humanDetected,setHumanDetected] = useState(false)
   const [events,setEvents] = useState<Array<string>>([])
   const [poseLandmarkerReady, setPoseLandmarkerReady] = useState(false)
@@ -18,6 +30,12 @@ function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [detectionRunning, setDetectionRunning] = useState(false)
   const hasGetUserMedia = () => !!navigator.mediaDevices?.getUserMedia;
+  const audioPlayer = useAudioPlayer()
+
+  useEffect(() => {
+    //audioPlayer.playing && audioPlayer.stop()
+    audioPlayer.load(audioFiles[audioIndex], {onend: () => setAudioIndex((audioIndex + 1) % audioFiles.length)})
+  },[audioIndex])
 
   // Load media pipe api
   useEffect(() => {
@@ -37,6 +55,22 @@ function App() {
   }, [])
 
   useEffect(() => {
+    const id = setInterval(() => {
+      if(detectionRunning && humanDetected && audioPlayer.isReady && audioPlayer.src && !audioPlayer.playing) {
+        setEvents(s => [...s, formatEvent("playing audio")])
+        console.log("playing audio")
+        audioPlayer.play()
+      } else {
+        console.log("not playing")
+      }
+    },5000)
+    return () => {
+      clearInterval(id)
+      audioPlayer.playing && audioPlayer.stop()
+    }
+  },[detectionRunning, audioPlayer, humanDetected, audioPlayer.src, audioPlayer.isReady, audioPlayer.playing])
+
+  useEffect(() => {
     let id: number
     const canvasCtx = canvasRef.current?.getContext("2d")
     const drawingUtils = canvasCtx && new DrawingUtils(canvasCtx)
@@ -51,7 +85,12 @@ function App() {
           poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-            setHumanDetected(result.landmarks.length > 0)
+            if(result.landmarks.length > 0){
+              setHumanDetected(true)
+              lastDetectedTime.current = startTimeMs
+            }else {
+              setHumanDetected(false)
+            }
             for (const landmark of result.landmarks) {
               drawingUtils.drawLandmarks(landmark, {
                 radius: (data) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 5, 1)
@@ -84,7 +123,7 @@ function App() {
   }, [detectionRunning])
 
   useEffect(() => {
-    setEvents(s => {
+    detectionRunning && setEvents(s => {
       const entry = formatEvent(humanDetected ? "Intruder detected" : "Intruder no longer detected")
       return [...s, entry]
     })
@@ -101,7 +140,7 @@ function App() {
           <span className="mdc-button__label">{detectionRunning ? "DISABLE DETECTION" : "ENABLE DETECTION"}</span>
         </button>
         <div style={{ position: 'relative' }}>
-          <WebCam ref={webCamRef} id='webcam' style={{ width: "480px", height: "360px", position: 'absolute' }} />
+          <WebCam audio={false} ref={webCamRef} id='webcam' style={{ width: "480px", height: "360px", position: 'absolute' }} />
           <canvas ref={canvasRef} className="output_canvas" id="output_canvas" width="480px" height="360px" style={{ position: 'absolute', left: "0px", top: '0px' }}></canvas>
           <div style={{ position: 'absolute', left: "490px", top: '0px', paddingLeft:"50px" }}>
             {events.slice(1).slice(-5).map(x =>  <CodeBlock text={x} language='shell' showLineNumbers={false}/>)}
