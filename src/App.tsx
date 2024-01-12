@@ -61,6 +61,13 @@ function App() {
         console.log("playing audio")
         audioPlayer.play()
       } else {
+        console.log(JSON.stringify({
+          detectionRunning,
+          humanDetected,
+          audioReady: audioPlayer.isReady,
+          src: audioPlayer.src,
+          playing: audioPlayer.playing
+        }))
         console.log("not playing")
       }
     },5000)
