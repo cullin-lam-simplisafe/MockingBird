@@ -11,13 +11,13 @@ function formatEvent(text: string){
 }
 
 const audioFiles = [
-  "/audio/calm.wav",
-  "/audio/noti.wav",
-  "/audio/appeal.wav",
-  "/audio/offer.wav",
-  "/audio/deter.wav",
-  "/audio/humanize.wav"
-]
+  "audio/calm.wav",
+  "audio/noti.wav",
+  "audio/appeal.wav",
+  "audio/offer.wav",
+  "audio/deter.wav",
+  "audio/humanize.wav"
+].map(x => import.meta.env.BASE_URL + x)
 
 function App() {
   const [audioIndex, setAudioIndex] = useState(0)
