@@ -37,7 +37,7 @@ function App() {
     const file = audioFiles[audioIndex]
     console.log(`loading audio ${file}`)
     audioPlayer.src !== file && audioPlayer.load(audioFiles[audioIndex], {onend: () => setAudioIndex((audioIndex + 1) % audioFiles.length)})
-  },[audioIndex, audioPlayer])
+  },[audioIndex])
 
   // Load media pipe api
   useEffect(() => {
